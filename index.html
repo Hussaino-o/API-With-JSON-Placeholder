@@ -80,36 +80,77 @@
   <body>
     <div class="container">
       <div class="users">
-        <ul>
-          <li class="active">
-            <h4>Test1</h4>
-            <span class="email">test@gmail.com</span>
-          </li>
-          <li>
-            <h4>Test1</h4>
-            <span class="email">test@gmail.com</span>
-          </li>
-        </ul>
+        <ul></ul>
       </div>
       <div class="user-posts">
-        <ul>
-          <li>
-            <h5>Post Title</h5>
-            <hr />
-            <p>
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Magni
-              magnam ex culpa dolores rerum blanditiis ipsum exercitationem
-              mollitia facere animi quia laborum doloremque perferendis, porro
-              sint dolorum distinctio delectus ipsam.
-            </p>
-          </li>
-        </ul>
+        <ul></ul>
       </div>
     </div>
     <script>
-      let usersContainer = document.querySelector(".users ul")
-      let userPostsContainer = document.querySelector(".user-posts ul")
-      
+      let usersContainer = document.querySelector(".users ul");
+      let userPostsContainer = document.querySelector(".user-posts ul");
+
+      let usersData = new XMLHttpRequest();
+      usersData.open("GET", "https://jsonplaceholder.typicode.com/users");
+      usersData.send();
+
+      usersData.onload = function () {
+        if (this.readyState === 4 && this.status === 200) {
+          let jsData = JSON.parse(this.responseText);
+          for (let i = 0; i < jsData.length; i++) {
+            let el = document.createElement("li");
+            if (i === 0) {
+              el.classList.add("active");
+            }
+            el.setAttribute("user-id", jsData[i].id);
+            el.innerHTML = `
+              <h4>${jsData[i].name}</h4>
+              <span class="email">${jsData[i].email}</span>
+            `;
+            usersContainer.appendChild(el);
+          }
+        }
+      };
+
+      let usersPosts = new XMLHttpRequest();
+      usersPosts.open("GET", "https://jsonplaceholder.typicode.com/posts");
+      usersPosts.send();
+      usersPosts.onreadystatechange = function () {
+        getPosts(1);
+      };
+      function getPosts(userIdPar) {
+        if (usersPosts.readyState === 4 && usersPosts.status === 200) {
+          let jsData = JSON.parse(usersPosts.responseText);
+          userPostsContainer.innerHTML = ""
+          for (let i = 0; i < jsData.length; i++) {
+            if (jsData[i].userId === userIdPar) {
+              let el = document.createElement("li");
+              el.innerHTML = `
+                <h5>${jsData[i].title}</h5>
+                <hr />
+                <p>${jsData[i].body}</p>
+              `;
+              userPostsContainer.appendChild(el);
+            }
+          }
+        }
+      }
+      document.addEventListener("click", (e) => {
+        if (e.target.hasAttribute("user-id")) {
+          document.querySelectorAll(".users ul li").forEach((el) => {
+            el.classList.remove("active")
+          })
+          e.target.classList.add("active")
+          getPosts(parseInt(e.target.getAttribute("user-id")));
+          console.log(users)
+        } else if (e.target.parentElement.hasAttribute("user-id")) {
+          document.querySelectorAll(".users ul li").forEach((el) => {
+            el.classList.remove("active")
+          })
+          e.target.parentElement.classList.add("active")
+          getPosts(parseInt(e.target.parentElement.getAttribute("user-id")));
+        }
+      });
     </script>
   </body>
 </html>
