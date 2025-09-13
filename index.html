@@ -87,70 +87,62 @@
       </div>
     </div>
     <script>
-      let usersContainer = document.querySelector(".users ul");
-      let userPostsContainer = document.querySelector(".user-posts ul");
-
-      let usersData = new XMLHttpRequest();
-      usersData.open("GET", "https://jsonplaceholder.typicode.com/users");
-      usersData.send();
-
-      usersData.onload = function () {
-        if (this.readyState === 4 && this.status === 200) {
-          let jsData = JSON.parse(this.responseText);
-          for (let i = 0; i < jsData.length; i++) {
-            let el = document.createElement("li");
-            if (i === 0) {
-              el.classList.add("active");
-            }
-            el.setAttribute("user-id", jsData[i].id);
-            el.innerHTML = `
-              <h4>${jsData[i].name}</h4>
-              <span class="email">${jsData[i].email}</span>
-            `;
-            usersContainer.appendChild(el);
-          }
-        }
-      };
-
-      let usersPosts = new XMLHttpRequest();
-      usersPosts.open("GET", "https://jsonplaceholder.typicode.com/posts");
-      usersPosts.send();
-      usersPosts.onreadystatechange = function () {
-        getPosts(1);
-      };
-      function getPosts(userIdPar) {
-        if (usersPosts.readyState === 4 && usersPosts.status === 200) {
-          let jsData = JSON.parse(usersPosts.responseText);
-          userPostsContainer.innerHTML = ""
-          for (let i = 0; i < jsData.length; i++) {
-            if (jsData[i].userId === userIdPar) {
-              let el = document.createElement("li");
-              el.innerHTML = `
-                <h5>${jsData[i].title}</h5>
-                <hr />
-                <p>${jsData[i].body}</p>
+      function getUsers() {
+        let request = new XMLHttpRequest();
+        request.open("GET", "https://jsonplaceholder.typicode.com/users");
+        request.responseType = "json";
+        request.send();
+        request.onload = function () {
+          if (this.readyState === 4 && this.status === 200) {
+            let users = request.response;
+            let i = 0;
+            for (user of users) {
+              document.querySelector(".users ul").innerHTML += `
+              <li class='${i === 0 ? "active" : ""}' onclick="userClicked(${user.id}, this)">
+                <h4>${user.name}</h4>
+                <span class="email">${user.email}</span>
+              </li>
               `;
-              userPostsContainer.appendChild(el);
+              i++;
             }
           }
-        }
+        };
       }
-      document.addEventListener("click", (e) => {
-        if (e.target.hasAttribute("user-id")) {
-          document.querySelectorAll(".users ul li").forEach((el) => {
-            el.classList.remove("active")
-          })
-          e.target.classList.add("active")
-          getPosts(parseInt(e.target.getAttribute("user-id")));
-          console.log(users)
-        } else if (e.target.parentElement.hasAttribute("user-id")) {
-          document.querySelectorAll(".users ul li").forEach((el) => {
-            el.classList.remove("active")
-          })
-          e.target.parentElement.classList.add("active")
-          getPosts(parseInt(e.target.parentElement.getAttribute("user-id")));
+
+      function getPosts(userIdPar) {
+        let request = new XMLHttpRequest();
+        request.open("GET", "https://jsonplaceholder.typicode.com/posts?userId=" + userIdPar);
+        request.responseType = "json"
+        request.send();
+        request.onload = () => {
+          if (request.readyState === 4 && request.status === 200) {
+            document.querySelector(".user-posts ul").innerHTML = "";
+            let posts = request.response
+            for (post of posts) {
+              document.querySelector(".user-posts ul").innerHTML += `
+                <li>
+                  <h5>${post.title}</h5>
+                  <hr />
+                  <p>${post.body}</p>
+                </li>
+              `;
+            }
+          }
+        };
+      }
+
+      function userClicked(userId, el) {
+        getPosts(userId);
+        let usersActive = document.querySelectorAll(".users ul .active")
+        for (userActive of usersActive) {
+          userActive.classList.remove("active")
         }
-      });
+        el.classList.add('active')
+      }
+
+      getUsers();
+      getPosts(1)
+      
     </script>
   </body>
 </html>
